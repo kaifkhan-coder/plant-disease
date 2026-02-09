@@ -3,7 +3,10 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import predictRoute from "./routes/predict.js";
-
+import authRoutes from "./routes/auth.js";
+import scanRoutes from "./routes/ScanRoutes.js";
+import { connect } from "mongoose";
+import connectDB from "./db.js";
 
 const app = express();
 const PORT = process.env.PORT || 2000;
@@ -11,10 +14,10 @@ const PORT = process.env.PORT || 2000;
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 
-// console.log("GEMINI_API_KEY:", process.env.GEMINI_API_KEY ? "Loaded" : "Not Loaded");
-console.log("GEMINI API KEY:", process.env.GEMINI_API_KEY);
-
+connectDB();    
 app.use("/api", predictRoute);
+app.use("/api/auth", authRoutes);
+app.use("/api/scans", scanRoutes);
 
 app.get("/", (req, res) => {
   res.send("🌱 Plant Disease Detection API Running");

@@ -39,7 +39,12 @@ Otherwise respond ONLY valid JSON:
   "confidence": 0.0,
   "explanation": "",
   "treatment": [],
-  "prevention": []
+  "prevention": [],
+  "waterRecommendation": {
+    "perDayLiters": 0,
+    "perWeekLiters": 0,
+    "notes": ""
+  }
 }
 `
           },
@@ -73,11 +78,49 @@ Otherwise respond ONLY valid JSON:
     let aiResult;
     try {
       aiResult = JSON.parse(aiText);
+      // 🌿 Generate Water Recommendation
+const generateWaterRecommendation = (plant, disease, isHealthy) => {
+  let perDay = 1; // default
+
+  const plantLower = plant?.toLowerCase() || "";
+
+  if (plantLower.includes("tomato")) perDay = 1.5;
+  else if (plantLower.includes("potato")) perDay = 1.2;
+  else if (plantLower.includes("rice")) perDay = 2.5;
+  else if (plantLower.includes("wheat")) perDay = 1.8;
+  else if (plantLower.includes("rose")) perDay = 0.8;
+
+  // If diseased → reduce watering slightly
+  if (!isHealthy) perDay *= 0.8;
+
+  return {
+    perDayLiters: Number(perDay.toFixed(2)),
+    perWeekLiters: Number((perDay * 7).toFixed(2)),
+    notes: isHealthy
+      ? "Maintain consistent watering schedule and avoid overwatering."
+      : "Avoid overwatering during disease. Ensure proper drainage and monitor soil moisture."
+  };
+};
     } catch {
       return res.status(500).json({ error: "Invalid AI response format" });
     }
 
     res.json(aiResult);
+    const normalizedDisease = aiResult.disease?.toLowerCase() || "";
+
+const isHealthy =
+  aiResult.confidence > 0.6 &&
+  (normalizedDisease === "healthy" ||
+   normalizedDisease === "no disease" ||
+   normalizedDisease === "none");
+
+aiResult.waterRecommendation = generateWaterRecommendation(
+  aiResult.plant,
+  aiResult.disease,
+  isHealthy
+);
+
+res.json(aiResult);
 
   } catch (err) {
     console.error("PREDICT ERROR:", err);
