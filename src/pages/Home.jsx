@@ -1,6 +1,82 @@
 import React, { useState, useEffect, useRef } from "react";
 import jsPDF from "jspdf";
 import { useNavigate } from "react-router-dom";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+
+// --- 3D BACKGROUND ---
+const Floating3DBackground = () => {
+  const shapes = Array.from({ length: 10 });
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {shapes.map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full blur-2xl opacity-40"
+          style={{
+            width: 140 + i * 12,
+            height: 140 + i * 12,
+            left: `${(i * 13) % 100}%`,
+            top: `${(i * 9) % 100}%`,
+            background:
+              i % 2 === 0 ? "rgba(16,185,129,0.55)" : "rgba(59,130,246,0.45)",
+          }}
+          animate={{
+            x: [0, (i % 2 === 0 ? 1 : -1) * 80, 0],
+            y: [0, (i % 2 === 0 ? -1 : 1) * 90, 0],
+            rotate: [0, 25, -25, 0],
+            scale: [1, 1.25, 1],
+          }}
+          transition={{
+            duration: 10 + i,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+const TiltCard = ({ children, className = "" }) => {
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+
+  const rx = useTransform(my, [-40, 40], [12, -12]);
+  const ry = useTransform(mx, [-40, 40], [-12, 12]);
+
+  const srx = useSpring(rx, { stiffness: 180, damping: 18 });
+  const sry = useSpring(ry, { stiffness: 180, damping: 18 });
+
+  const onMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = e.clientX - rect.left - rect.width / 2;
+    const py = e.clientY - rect.top - rect.height / 2;
+    mx.set(px);
+    my.set(py);
+  };
+
+  const onLeave = () => {
+    mx.set(0);
+    my.set(0);
+  };
+
+  return (
+    <motion.div
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      style={{
+        rotateX: srx,
+        rotateY: sry,
+        transformStyle: "preserve-3d",
+      }}
+      className={`will-change-transform ${className}`}
+    >
+      <div style={{ transform: "translateZ(28px)" }}>{children}</div>
+    </motion.div>
+  );
+};
+
 
 const Home = () => {
   const [image, setImage] = useState(null);
@@ -355,7 +431,10 @@ const diseaseStats = result
     }
   : { Healthy: 0, Diseased: 0 };
   return (
-    <div className="max-w-xl mx-auto space-y-8">
+    <div className="relative min-h-screen">
+      <Floating3DBackground/>
+      
+    <div className="relative max-w-xl mx-auto space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-extrabold text-gray-900">
@@ -367,7 +446,7 @@ const diseaseStats = result
       </div>
 
       {/* Upload */}
-      <div className="bg-white rounded-3xl border shadow-lg p-6 space-y-6">
+<TiltCard className="bg-white rounded-3xl border shadow-lg p-6 space-y-6">
         <label className="block cursor-pointer">
           <div className="border-2 border-dashed border-emerald-300 rounded-2xl p-8 text-center hover:bg-emerald-50 transition">
             <p className="font-semibold text-gray-700">
@@ -401,30 +480,36 @@ const diseaseStats = result
 )}
         {image && (
           <div className="space-y-3">
-            <img
-              src={URL.createObjectURL(image)}
-              alt="Preview"
-              className="rounded-xl max-h-64 mx-auto"
-            />
+<motion.img
+  src={URL.createObjectURL(image)}
+  alt="Preview"
+  className="rounded-xl max-h-64 mx-auto"
+  initial={{ opacity: 0, y: 10, rotateX: 8 }}
+  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+  whileHover={{ scale: 1.03, rotateZ: 0.7 }}
+  transition={{ type: "spring", stiffness: 180, damping: 16 }}
+/>
             <p className="text-center text-sm text-gray-600">
               📷 {fileName}
             </p>
           </div>
         )}
-      </div>
+      </TiltCard>
 
       {/* Analyze Button */}
-      <button
-        onClick={handleAnalyze}
-        disabled={!image || loading}
-        className={`w-full py-4 rounded-2xl font-bold transition ${
-          image
-            ? "bg-emerald-600 text-white hover:bg-emerald-700"
-            : "bg-gray-200 text-gray-400"
-        }`}
-      >
-        {loading ? "Analyzing with AI..." : "Analyze Plant"}
-      </button>
+<motion.button
+  onClick={handleAnalyze}
+  disabled={!image || loading}
+  whileHover={{ scale: image ? 1.02 : 1 }}
+  whileTap={{ scale: image ? 0.98 : 1 }}
+  className={`w-full py-4 rounded-2xl font-bold transition ${
+    image
+      ? "bg-emerald-600 text-white hover:bg-emerald-700"
+      : "bg-gray-200 text-gray-400"
+  }`}
+>
+  {loading ? "Analyzing with AI..." : "Analyze Plant"}
+</motion.button>
 
       {/* Result */}
 {result?.notPlant && (
@@ -434,6 +519,12 @@ const diseaseStats = result
 )}
 
 {result && !result.notPlant && (
+  <motion.div
+  initial={{ opacity: 0, y:18, rotateX: 10}}
+  animate={{ opacity: 1, y:0,  rotateX: 0}}
+  transition={{ type: "spring", stiffness: 160, damping: 18}}>
+
+    <TiltCard className="bg-gray-50 rounded-xl p-5 border space-y-3">
   <div className="bg-gray-50 rounded-xl p-5 border space-y-3">
     <h3 className="font-bold text-xl text-emerald-700">
       🌱 {result.plant}
@@ -591,6 +682,8 @@ const diseaseStats = result
   📄 Download Report (PDF)
 </button>
   </div>
+  </TiltCard>
+  </motion.div>
 )}
         {/* Footer Note */}
         <footer className="mt-6">
@@ -598,6 +691,7 @@ const diseaseStats = result
         🔒 Image processed securely and not stored
       </p>
     </footer>
+  </div>
   </div>
 );
 };
