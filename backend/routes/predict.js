@@ -8,27 +8,88 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
 });
+// const weather = await fetch("https://api.openweathermap.org/data/2.5/weather?q=Mumbai&appid=API_KEY");
 
+const getUserLocation = async (ip) => {
+  try {
+    const res = await fetch(`https://ipapi.co/${ip}/json/`);
+    const data = await res.json();
+
+    return {
+      city: data?.city || "Mumbai",
+      lat: data?.latitude,
+      lon: data?.longitude,
+    };
+  } catch (err) {
+    console.error("Location Error:", err);
+    return { city: "Mumbai" };
+  }
+};
+
+const getWeatherData = async (lat, lon) => {
+  try {
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${process.env.WEATHER_API_KEY}`
+    );
+
+    const data = await res.json();
+
+    return {
+      temp: data?.main?.temp || 25,
+      humidity: data?.main?.humidity || 50,
+      rain: data?.rain?.["1h"] || 0,
+    };
+  } catch (err) {
+    console.error("Weather API Error:", err);
+    return { temp: 25, humidity: 50, rain: 0 };
+  }
+};
 // ✅ Water Recommendation (keep OUTSIDE route so it's reusable)
-const generateWaterRecommendation = (plant, disease, isHealthy) => {
-  let perDay = 1; // default liters/day
+const generateWaterRecommendation = (
+  plant,
+  disease,
+  isHealthy,
+  confidence,
+  explanation,
+  weather
+) => {
+  let base = 1;
+
   const p = (plant || "").toLowerCase();
+  const d = (disease || "").toLowerCase();
+  const exp = (explanation || "").toLowerCase();
 
-  if (p.includes("tomato")) perDay = 1.5;
-  else if (p.includes("potato")) perDay = 1.2;
-  else if (p.includes("rice")) perDay = 2.5;
-  else if (p.includes("wheat")) perDay = 1.8;
-  else if (p.includes("rose")) perDay = 0.8;
+  // 🌱 Plant base
+  if (p.includes("tomato")) base = 1.2;
+  else if (p.includes("potato")) base = 1.0;
+  else if (p.includes("rice")) base = 2.2;
+  else if (p.includes("wheat")) base = 1.5;
+  else if (p.includes("rose")) base = 0.7;
 
-  // diseased => slightly reduce watering (general safe rule)
-  if (!isHealthy) perDay *= 0.8;
+  // 🦠 Disease logic
+  if (d.includes("fungal") || d.includes("rot")) base *= 0.6;
+  else if (d.includes("bacterial")) base *= 0.7;
+  else if (d.includes("viral")) base *= 0.85;
+
+  // 🍂 Leaf condition
+  if (exp.includes("dry") || exp.includes("wilting")) base *= 1.2;
+  if (exp.includes("overwater") || exp.includes("waterlogged")) base *= 0.5;
+
+  // 🎯 Confidence safety
+  if (confidence < 0.5) base *= 0.9;
+
+  // 🌦️ Weather logic (MAIN UPGRADE)
+  if (weather.temp > 30) base *= 1.2;       // hot → more water
+  if (weather.humidity > 80) base *= 0.8;   // humid → less water
+  if (weather.rain > 0) base *= 0.7;        // raining → reduce
+
+  // 🚫 Clamp
+  base = Math.max(0.1, Math.min(base, 5));
 
   return {
-    perDayLiters: Number(perDay.toFixed(2)),
-    perWeekLiters: Number((perDay * 7).toFixed(2)),
-    notes: isHealthy
-      ? "Maintain consistent watering and avoid overwatering."
-      : "Avoid overwatering during disease. Ensure drainage and monitor soil moisture.",
+    perDayLiters: Number(base.toFixed(2)),
+    perWeekLiters: Number((base * 7).toFixed(2)),
+    notes: "Water adjusted based on plant condition and real-time weather.",
   };
 };
 
@@ -60,7 +121,20 @@ router.post("/predict", upload.single("image"), async (req, res) => {
     if (!req.file?.buffer) {
       return res.status(400).json({ error: "Image not received" });
     }
+const userIP =
+  req.headers["x-forwarded-for"]?.split(",")[0] ||
+  req.socket.remoteAddress;
 
+// fallback for localhost
+let location = await getUserLocation(userIP);
+
+if (!location.lat || !location.lon) {
+  location = {
+    city: "Mumbai",
+    lat: 19.0760,
+    lon: 72.8777,
+  };
+}
     const base64Image = req.file.buffer.toString("base64");
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -141,12 +215,20 @@ Otherwise respond ONLY valid JSON (no markdown, no backticks):
       (normalizedDisease === "healthy" ||
         normalizedDisease === "no disease" ||
         normalizedDisease === "none");
-
-    aiResult.waterRecommendation = generateWaterRecommendation(
-      aiResult.plant,
-      aiResult.disease,
-      isHealthy
-    );
+const weather = await getWeatherData(
+  location.lat || 19.0760,
+  location.lon || 72.8777
+);
+console.log("User Location:", location);
+console.log("Weather Data:", weather);
+aiResult.waterRecommendation = generateWaterRecommendation(
+  aiResult.plant,
+  aiResult.disease,
+  isHealthy,
+  aiResult.confidence,
+  aiResult.explanation,
+  weather
+);
 
     // ✅ send only ONCE
     return res.json(aiResult);

@@ -5,32 +5,61 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 // --- 3D BACKGROUND ---
 const Floating3DBackground = () => {
-  const shapes = Array.from({ length: 10 });
+  const shapes = Array.from({ length: 15 });
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {shapes.map((_, i) => (
         <motion.div
           key={i}
-          className="absolute rounded-full blur-2xl opacity-40"
+          className="absolute rounded-full blur-2xl opacity-30"
           style={{
-            width: 140 + i * 12,
-            height: 140 + i * 12,
-            left: `${(i * 13) % 100}%`,
-            top: `${(i * 9) % 100}%`,
+            width: 120 + i * 10,
+            height: 120 + i * 10,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
             background:
-              i % 2 === 0 ? "rgba(16,185,129,0.55)" : "rgba(59,130,246,0.45)",
+              i % 2 === 0
+                ? "rgba(34,197,94,0.5)"
+                : "rgba(59,130,246,0.4)",
           }}
           animate={{
-            x: [0, (i % 2 === 0 ? 1 : -1) * 80, 0],
-            y: [0, (i % 2 === 0 ? -1 : 1) * 90, 0],
-            rotate: [0, 25, -25, 0],
-            scale: [1, 1.25, 1],
+            x: [0, 100, -50, 0],
+            y: [0, -120, 60, 0],
+            rotate: [0, 180, 360],
+            scale: [1, 1.3, 1],
           }}
           transition={{
-            duration: 10 + i,
+            duration: 12 + i,
             repeat: Infinity,
             ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+const ChakraBackground = () => {
+  return (
+    <div className="absolute inset-0 -z-10">
+      {[...Array(10)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full blur-3xl opacity-30"
+          style={{
+            width: 200 + i * 20,
+            height: 200 + i * 20,
+            background: "rgba(34,197,94,0.4)",
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            scale: [1, 1.4, 1],
+            opacity: [0.2, 0.5, 0.2],
+          }}
+          transition={{
+            duration: 4 + i,
+            repeat: Infinity,
           }}
         />
       ))}
@@ -232,7 +261,6 @@ const isHealthy =
 let weather = { temperature: 30, humidity: 60, rain: false };
 
 try {
-  weather = await getWeatherData("Mumbai");
 } catch (err) {
   console.log("Weather fetch failed, using default values");
 }
@@ -253,8 +281,11 @@ const irrigationSchedule = generateIrrigationSchedule(
 setResult({
   ...data,
   isHealthy,
-  waterRecommendation,
-  irrigationSchedule
+  irrigationSchedule: generateIrrigationSchedule(
+    data.weather || {},  // optional if you send weather from backend
+    isHealthy,
+    data.confidence
+  )
 });
 
     // 2️⃣ Save to database
@@ -430,16 +461,72 @@ const diseaseStats = result
         : 0,
     }
   : { Healthy: 0, Diseased: 0 };
+  // --- AI HUMAN CHARACTER (Naruto-style assistant) ---
+const AICharacter = ({ result }) => {
   return (
-    <div className="relative min-h-screen">
-      <Floating3DBackground/>
+    <motion.div
+      className="fixed bottom-6 right-6 z-50 flex items-end gap-3"
+      initial={{ opacity: 0, x: 80 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.6 }}
+    >
+      <AICharacter result={result} />
+      {/* Speech Bubble */}
+      <motion.div
+        className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg text-sm max-w-[200px]"
+        animate={{ y: [0, -5, 0] }}
+        transition={{ repeat: Infinity, duration: 2 }}
+      >
+        {result
+          ? result.isHealthy
+            ? "✅ This plant looks healthy!"
+            : "⚠️ Disease detected, check solution!"
+          : "👋 Upload a leaf, I'll analyze it!"}
+      </motion.div>
+
+      {/* Character */}
+      <motion.div
+        className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-yellow-500 flex items-center justify-center text-2xl shadow-xl"
+        animate={{
+          y: [0, -10, 0],
+          rotate: [0, 3, -3, 0],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 3,
+        }}
+      >
+        🧑‍🌾
+      </motion.div>
+    </motion.div>
+  );
+};
+  return (
+    
+<motion.div
+  initial={{ opacity: 0, y: 40 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.8, ease: "easeOut" }}
+>      
+
+<ChakraBackground/>
       
     <div className="relative max-w-xl mx-auto space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-extrabold text-gray-900">
-          Plant Disease Detection 🌿
-        </h2>
+<motion.h2
+  className="text-4xl font-extrabold text-center bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 bg-clip-text text-transparent"
+  animate={{
+    textShadow: [
+      "0 0 5px #22c55e",
+      "0 0 20px #22c55e",
+      "0 0 5px #22c55e",
+    ],
+  }}
+  transition={{ duration: 2, repeat: Infinity }}
+>
+  🌿 Plant AI Analyzer
+</motion.h2>
         <p className="text-gray-500">
           Upload a leaf image and let AI analyze plant health
         </p>
@@ -487,7 +574,7 @@ const diseaseStats = result
   initial={{ opacity: 0, y: 10, rotateX: 8 }}
   animate={{ opacity: 1, y: 0, rotateX: 0 }}
   whileHover={{ scale: 1.03, rotateZ: 0.7 }}
-  transition={{ type: "spring", stiffness: 180, damping: 16 }}
+  transition={{  type: "spring", stiffness: 180, damping: 16 }}
 />
             <p className="text-center text-sm text-gray-600">
               📷 {fileName}
@@ -499,17 +586,24 @@ const diseaseStats = result
       {/* Analyze Button */}
 <motion.button
   onClick={handleAnalyze}
-  disabled={!image || loading}
-  whileHover={{ scale: image ? 1.02 : 1 }}
-  whileTap={{ scale: image ? 0.98 : 1 }}
-  className={`w-full py-4 rounded-2xl font-bold transition ${
-    image
-      ? "bg-emerald-600 text-white hover:bg-emerald-700"
-      : "bg-gray-200 text-gray-400"
-  }`}
+  whileHover={{
+    scale: 1.05,
+    boxShadow: "0px 0px 20px #22c55e",
+  }}
+  whileTap={{ scale: 0.95 }}
+  className="w-full py-4 rounded-2xl font-bold bg-gradient-to-r from-green-500 to-emerald-700 text-white"
 >
-  {loading ? "Analyzing with AI..." : "Analyze Plant"}
+  Analyze Plant ⚡
 </motion.button>
+{loading && (
+  <motion.div className="flex justify-center items-center mt-4">
+    <motion.div
+      className="w-12 h-12 rounded-full border-4 border-red-600 border-t-transparent"
+      animate={{ rotate: 360 }}
+      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+    />
+  </motion.div>
+)}
 
       {/* Result */}
 {result?.notPlant && (
@@ -524,8 +618,8 @@ const diseaseStats = result
   animate={{ opacity: 1, y:0,  rotateX: 0}}
   transition={{ type: "spring", stiffness: 160, damping: 18}}>
 
-    <TiltCard className="bg-gray-50 rounded-xl p-5 border space-y-3">
-  <div className="bg-gray-50 rounded-xl p-5 border space-y-3">
+<TiltCard className="bg-white/30 backdrop-blur-lg rounded-xl p-5 border border-white/40 shadow-xl space-y-3">  
+<div className="bg-gray-50 rounded-xl p-5 border space-y-3">
     <h3 className="font-bold text-xl text-emerald-700">
       🌱 {result.plant}
     </h3>
@@ -558,8 +652,11 @@ const diseaseStats = result
     </p>
 
     {result?.waterRecommendation && (
-  <div className="mt-4 bg-blue-50 p-3 rounded-lg">
-    <h4 className="font-semibold">💧 Water Recommendation</h4>
+<motion.div
+  className="mt-4 bg-blue-50 p-3 rounded-lg"
+  animate={{ y: [0, -5, 0] }}
+  transition={{ repeat: Infinity, duration: 2 }}
+>    <h4 className="font-semibold">💧 Water Recommendation</h4>
 <p>
   Per Day: {result?.waterRecommendation?.perDayLiters || 0} liters
 </p>
@@ -569,7 +666,7 @@ const diseaseStats = result
 <p className="text-sm text-gray-600">
   {result?.waterRecommendation?.notes || "No recommendation available"}
 </p>
-  </div>
+  </motion.div>
 )}
 {result.irrigationSchedule && (
   <div className="mt-4 bg-green-50 p-3 rounded-lg">
@@ -662,25 +759,29 @@ const diseaseStats = result
   </div>
 )}
 </div>
-    <button
+    <motion.button
   onClick={speakResult}
-  className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+  // className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+  className="bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl"
 >
   🔊 Listen Diagnosis
-</button><br className="display: flex flex-direction: row;"></br>
-<button
+</motion.button>
+<br className="display: flex flex-direction: row;"></br>
+<motion.button
   onClick={openMaps}
-  className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
+  // className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
+  className="bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl"
 >
   🗺️ Find Nearby Plant Stores
-</button>
+</motion.button>
 <br />
-<button
+<motion.button
   onClick={downloadPDF}
-  className="mt-3 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700"
+  // className="mt-3 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700"
+  className="bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl"
 >
   📄 Download Report (PDF)
-</button>
+</motion.button>
   </div>
   </TiltCard>
   </motion.div>
@@ -692,7 +793,7 @@ const diseaseStats = result
       </p>
     </footer>
   </div>
-  </div>
+  </motion.div>
 );
 };
 
