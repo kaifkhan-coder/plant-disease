@@ -461,7 +461,6 @@ const diseaseStats = result
         : 0,
     }
   : { Healthy: 0, Diseased: 0 };
-  // --- AI HUMAN CHARACTER (Naruto-style assistant) ---
 const AICharacter = ({ result }) => {
   return (
     <motion.div
@@ -470,7 +469,6 @@ const AICharacter = ({ result }) => {
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <AICharacter result={result} />
       {/* Speech Bubble */}
       <motion.div
         className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg text-sm max-w-[200px]"
@@ -793,6 +791,7 @@ const AICharacter = ({ result }) => {
       </p>
     </footer>
   </div>
+  <AICharacter result={result} />
   </motion.div>
 );
 };
