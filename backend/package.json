@@ -14,14 +14,16 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@openrouter/sdk": "^0.8.0",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.0",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "jspdf": "^4.0.0",
+    "mongoose": "^9.4.1",
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
     "openai": "^6.16.0",
-    "passport": "^0.7.0"
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
   }
 }
