@@ -242,7 +242,7 @@ const handleAnalyze = async () => {
 
   try {
     // 1️⃣ Send image to AI prediction endpoint
-    const response = await fetch("http://localhost:2000/api/predict", {
+    const response = await fetch("https://plant-disease-10.onrender.com/api/predict", {
       method: "POST",
       body: formData,
     });
@@ -291,7 +291,7 @@ setResult({
     // 2️⃣ Save to database
     // Assuming your backend has /api/scans endpoint and user is logged in
     const token = localStorage.getItem("token"); // your auth token
-    await fetch("http://localhost:2000/api/scans", {
+    await fetch("https://plant-disease-10.onrender.com/api/scans", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

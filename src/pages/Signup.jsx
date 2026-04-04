@@ -9,7 +9,7 @@ export default function Signup() {
 
   const signup = async () => {
     try {
-      const res = await axios.post("http://localhost:2000/api/auth/signup", {
+      const res = await axios.post("https://plant-disease-10.onrender.com/api/auth/signup", {
         email,
         password,
       });

@@ -15,7 +15,7 @@ const History = () => {
         return;
       }
 
-      const res = await fetch("http://localhost:2000/api/scans", {
+      const res = await fetch("https://plant-disease-10.onrender.com/api/scans", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -36,7 +36,7 @@ const History = () => {
 
   const handleClear = async () => {
     const token = localStorage.getItem("token");
-    await fetch("http://localhost:2000/api/scans", {
+    await fetch("https://plant-disease-10.onrender.com/api/scans", {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

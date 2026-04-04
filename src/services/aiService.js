@@ -2,7 +2,7 @@
 
 export const analyzePlant = async (base64Image) => {
   try {
-    const res = await fetch("http://localhost:2000/api/predict", {
+    const res = await fetch("https://plant-disease-10.onrender.com/api/predict", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
