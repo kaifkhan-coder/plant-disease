@@ -336,9 +336,6 @@ export default function Login() {
                   <label className="block text-sm font-bold text-slate-700">
                     Password
                   </label>
-                  <Link to="/forgot-password" strokeLinecap="round" className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors">
-                    Forgot Password?
-                  </Link>
                 </div>
                 <div className="relative group">
                   <input

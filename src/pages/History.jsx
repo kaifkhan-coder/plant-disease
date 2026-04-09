@@ -17,7 +17,7 @@ const History = () => {
       }
 
       try {
-        const res = await fetch("https://plant-disease-10.onrender.com/api/scans", {
+        const res = await fetch("http://localhost:2000/api/scans", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

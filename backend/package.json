@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@openrouter/sdk": "^0.8.0",
+    "@openrouter/sdk": "^0.11.2",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.0",
@@ -24,7 +24,7 @@
     "mongoose": "^9.4.1",
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
-    "openai": "^6.16.0",
+    "openai": "^6.34.0",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0"
