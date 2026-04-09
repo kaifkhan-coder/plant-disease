@@ -407,7 +407,7 @@ const Home = () => {
               onClick={startCamera}
               className="text-xs sm:text-sm font-bold text-pink-400 border border-pink-500/50 px-4 py-2 rounded-lg hover:bg-pink-500/20 transition-colors uppercase tracking-widest"
             >
-              [ Activate Kiroshi Optics ]
+              [ Use camera ]
             </button>
           </div>
 
