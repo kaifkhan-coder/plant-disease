@@ -1006,7 +1006,8 @@ const data = JSON.parse(text);
                     <div>
                       <h3 className="font-bold text-slate-800 mb-3">Recommended Treatment</h3>
                       <ul className="space-y-2">
-                        {result.treatment.map((t, i) => (
+                        {/* {result.treatment.map((t, i) => ( */}
+                        {(result.treatment || []).map((t, i) => (
                           <li key={i} className="text-sm text-slate-600 flex items-start gap-2">
                             <span className="text-emerald-500 mt-1">•</span> {t}
                           </li>
@@ -1016,7 +1017,8 @@ const data = JSON.parse(text);
                     <div>
                       <h3 className="font-bold text-slate-800 mb-3">Prevention Tips</h3>
                       <ul className="space-y-2">
-                        {result.prevention.map((p, i) => (
+                        {/* {result.prevention.map((p, i) => ( */}
+                        {(result.prevention || []).map((p, i) => (
                           <li key={i} className="text-sm text-slate-600 flex items-start gap-2">
                             <span className="text-blue-400 mt-1">•</span> {p}
                           </li>
