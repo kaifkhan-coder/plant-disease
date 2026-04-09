@@ -143,11 +143,11 @@ if (!location.lat || !location.lon) {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
         // Optional but recommended by OpenRouter:
-        // "HTTP-Referer": "http://localhost:3000",
-        // "X-Title": "Plant Disease Detection",
+        "HTTP-Referer": "https://plant-disease-10.onrender.com",
+        "X-Title": "Plant Disease Detection",
       },
       body: JSON.stringify({
-        model: "google/gemma-3-27b-it",
+        model: "openai/gpt-4o-mini",
         temperature: 0.2,
         messages: [
           {
@@ -188,27 +188,69 @@ Otherwise respond ONLY valid JSON (no markdown, no backticks):
       }),
     });
 
-    const data = await response.json();
-    const aiText = data?.choices?.[0]?.message?.content?.trim();
+const models = [
+  "openai/gpt-4o-mini",
+  "meta-llama/llama-3.2-11b-vision-instruct"
+];
 
-    console.log("AI RAW RESPONSE:", aiText);
+let data = null;
+let aiText = null;
 
-    if (!aiText) {
-      return res.status(500).json({ error: "Empty AI response" });
-    }
+for (const model of models) {
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      temperature: 0.2,
+      messages: [
+        {
+          role: "system",
+          content: `
+You are a plant disease detection AI.
 
+If not plant → return exactly: NOT_A_PLANT
+
+Otherwise return ONLY valid JSON.
+          `.trim(),
+        },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Analyze this plant leaf image and return JSON only." },
+            {
+              type: "image_url",
+              image_url: { url: `data:image/jpeg;base64,${base64Image}` },
+            },
+          ],
+        },
+      ],
+    }),
+  });
+
+  data = await response.json();
+  aiText = data?.choices?.[0]?.message?.content?.trim();
+
+  if (aiText) break; // stop if success
+}
+console.log("OPENROUTER FULL RESPONSE:", JSON.stringify(data, null, 2));
     if (aiText === "NOT_A_PLANT") {
       return res.json({ notPlant: true });
     }
 
     const aiResult = extractJson(aiText);
-    if (!aiResult) {
-      return res.status(500).json({
-        error: "Invalid AI response format",
-        raw: aiText.slice(0, 500),
-      });
-    }
+if (!aiText) {
+  console.log("ALL MODELS FAILED:", JSON.stringify(data, null, 2));
 
+  return res.status(200).json({
+    notPlant: false,
+    error: "AI failed to analyze image",
+    fallback: true
+  });
+}
     const normalizedDisease = (aiResult.disease || "").toLowerCase();
     const isHealthy =
       aiResult.confidence > 0.6 &&
